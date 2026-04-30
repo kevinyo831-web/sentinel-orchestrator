@@ -17,17 +17,17 @@ const C = {
 
 const P = {
   gemini:{ name:"GEMINI PRO", tag:"GEM" }, grok:{ name:"GROK", tag:"GRK" },
-  meta:{ name:"META AI", tag:"MTA" }, perplexity:{ name:"PERPLEXITY", tag:"PPX" },
+  perplexity:{ name:"PERPLEXITY", tag:"PPX" },
   openai:{ name:"OPENAI", tag:"OAI" }, nvidia:{ name:"NVIDIA NIM", tag:"NIM" },
   vertex:{ name:"VERTEX AI", tag:"VTX" }, local:{ name:"LOCAL LLM", tag:"LCL" },
 };
 
 const MODES = [
-  { id:"quick", name:"QUICK", label:"快速", desc:"Gemini + NIM / NIM 強化", providers:["gemini","nvidia"], enhancer:"nvidia" },
-  { id:"predict", name:"PREDICT", label:"預測", desc:"Gemini + NIM + Perplexity / NIM 強化", providers:["gemini","nvidia","perplexity"], enhancer:"nvidia" },
-  { id:"deep", name:"DEEP RESEARCH", label:"深度研究", desc:"全引擎 / NIM 強化綜合", providers:["gemini","grok","meta","perplexity","openai","nvidia","vertex"], enhancer:"nvidia" },
-  { id:"debate", name:"DEBATE", label:"AI 辯論", desc:"正方 vs 反方 / Vertex 裁判", providers:["grok","meta","openai","nvidia","gemini","vertex"], enhancer:"vertex",
-    teams:{ pro:{l:"PROPOSITION",m:["grok","meta"],r:"openai"}, con:{l:"OPPOSITION",m:["nvidia","gemini"]}, judge:{l:"VERDICT",m:["vertex"]} } },
+  { id:"quick", name:"QUICK", label:"快速", desc:"戰略長 + 營運長", providers:["gemini","nvidia"], enhancer:"nvidia" },
+  { id:"predict", name:"PREDICT", label:"預測", desc:"戰略 + 營運 + 情報", providers:["gemini","nvidia","perplexity"], enhancer:"nvidia" },
+  { id:"deep", name:"DEEP RESEARCH", label:"深度研究", desc:"全智囊團綜合", providers:["gemini","grok","perplexity","openai","nvidia","vertex"], enhancer:"nvidia" },
+  { id:"debate", name:"DEBATE", label:"AI 辯論", desc:"創業家 vs 營運長", providers:["grok","openai","nvidia","gemini","vertex"], enhancer:"vertex",
+    teams:{ pro:{l:"PROPOSITION",m:["grok"],r:"openai"}, con:{l:"OPPOSITION",m:["nvidia","gemini"]}, judge:{l:"VERDICT",m:["vertex"]} } },
 ];
 
 // ═══ MARKDOWN PARSER ═══
@@ -1044,7 +1044,7 @@ export default function App(){
       {/* MAIN */}
       <main style={{flex:1,display:"flex",flexDirection:"column",height:"100%",zIndex:1,position:"relative"}}>
         <div style={{position:"absolute",top:0,left:0,right:0,bottom:0,pointerEvents:"none",zIndex:0,overflow:"hidden",opacity:.025}}><div style={{position:"absolute",left:0,right:0,height:3,background:C.accent,animation:"scanline 8s linear infinite"}}/></div>
-        <header style={{height:46,minHeight:46,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 14px",borderBottom:`1px solid ${C.border}`,background:`${C.bg}E8`,backdropFilter:"blur(8px)",zIndex:1}}>
+        <header style={{height:56,minHeight:56,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 14px",borderBottom:`1px solid ${C.border}`,background:`${C.bg}E8`,backdropFilter:"blur(8px)",zIndex:1,position:"sticky",top:0}}>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             <button onClick={()=>setSidebar(!sidebar)} style={{background:"none",border:"none",cursor:"pointer",padding:4,display:"flex"}}><Icon type="menu" size={16} color={C.text2}/></button>
             <select value={mode} onChange={e=>setMode(e.target.value)} style={{fontFamily:"'Orbitron',sans-serif",fontSize:11,fontWeight:700,color:C.accent,letterSpacing:".06em",background:C.surface,border:`1px solid ${C.border}`,borderRadius:3,padding:"4px 8px",cursor:"pointer"}}>
