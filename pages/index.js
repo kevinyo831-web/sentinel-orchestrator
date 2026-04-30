@@ -987,6 +987,12 @@ export default function App(){
         .md-body p{font-family:'Noto Sans TC','Share Tech Mono',sans-serif}
         .md-body pre{font-family:'Share Tech Mono',monospace}
         .md-body code{font-family:'Share Tech Mono',monospace}
+        
+        /* Mobile: 強制隱藏側邊欄 */
+        @media (max-width: 768px) {
+          aside { display: none !important; }
+          main { margin-left: 0 !important; }
+        }
       `}</style>
 
       {/* SIDEBAR */}
