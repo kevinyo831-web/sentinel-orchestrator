@@ -1047,12 +1047,13 @@ export default function App(){
         <header style={{height:46,minHeight:46,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 14px",borderBottom:`1px solid ${C.border}`,background:`${C.bg}E8`,backdropFilter:"blur(8px)",zIndex:1}}>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             <button onClick={()=>setSidebar(!sidebar)} style={{background:"none",border:"none",cursor:"pointer",padding:4,display:"flex"}}><Icon type="menu" size={16} color={C.text2}/></button>
-            <span style={{fontFamily:"'Orbitron',sans-serif",fontSize:11,fontWeight:700,color:C.accent,letterSpacing:".06em"}}>{cur.name}</span>
-            <span style={{fontSize:10,color:C.text3,letterSpacing:".04em"}}>{cur.providers.length}{localLLM?"+1":""} ENGINES</span>
+            <select value={mode} onChange={e=>setMode(e.target.value)} style={{fontFamily:"'Orbitron',sans-serif",fontSize:11,fontWeight:700,color:C.accent,letterSpacing:".06em",background:C.surface,border:`1px solid ${C.border}`,borderRadius:3,padding:"4px 8px",cursor:"pointer"}}>
+              {MODES.map(m=><option key={m.id} value={m.id}>{m.name}</option>)}
+            </select>
+            <span style={{fontSize:10,color:C.text3,letterSpacing:".04em",display:"none"}} className="desktop-only">{cur.providers.length}{localLLM?"+1":""} ENGINES</span>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             <div style={{display:"flex",gap:3}}>{cur.providers.map(pv=><span key={pv} style={{width:4,height:4,borderRadius:1,background:C.accent,opacity:.6}}/>)}{localLLM&&<span style={{width:4,height:4,borderRadius:1,background:C.accent2,opacity:.6}}/>}</div>
-            <span style={{fontSize:9,color:C.text3,letterSpacing:".06em"}}>{msgs.filter(m=>m.type==="ai").reduce((a,m)=>a+(m.providers.length+1)*140,0)} TKN</span>
           </div>
         </header>
 
