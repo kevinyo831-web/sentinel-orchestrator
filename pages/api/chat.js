@@ -29,8 +29,20 @@ export default async function handler(req, res) {
             contents: [{ parts: [{ text: `${systemPrompt}\n\n使用者問題：${query}` }] }]
           })
         });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`Gemini API 錯誤 (${response.status}): ${errorText}`);
+        }
+        
         const gData = await response.json();
-        return res.json({ text: gData.candidates?.[0]?.content?.parts?.[0]?.text || '無法生成回應' });
+        const text = gData.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (!text) {
+          throw new Error(`Gemini 回應格式錯誤: ${JSON.stringify(gData)}`);
+        }
+        
+        return res.json({ text });
 
       case 'perplexity':
         response = await fetch('https://api.perplexity.ai/chat/completions', {
