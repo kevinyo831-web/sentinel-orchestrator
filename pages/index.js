@@ -25,7 +25,7 @@ const P = {
 const MODES = [
   { id:"quick", name:"QUICK", label:"快速", desc:"戰略長 + 營運長", providers:["gemini","nvidia"], enhancer:"nvidia" },
   { id:"predict", name:"PREDICT", label:"預測", desc:"戰略 + 營運 + 情報", providers:["gemini","nvidia","perplexity"], enhancer:"nvidia" },
-  { id:"deep", name:"DEEP RESEARCH", label:"深度研究", desc:"全智囊團綜合", providers:["gemini","grok","perplexity","openai","nvidia","vertex"], enhancer:"nvidia" },
+  { id:"deep", name:"RESEARCH", label:"研究", desc:"全智囊團綜合", providers:["gemini","grok","perplexity","openai","nvidia","vertex"], enhancer:"nvidia" },
   { id:"debate", name:"DEBATE", label:"AI 辯論", desc:"創業家 vs 營運長", providers:["grok","openai","nvidia","gemini","vertex"], enhancer:"vertex",
     teams:{ pro:{l:"PROPOSITION",m:["grok"],r:"openai"}, con:{l:"OPPOSITION",m:["nvidia","gemini"]}, judge:{l:"VERDICT",m:["vertex"]} } },
 ];
