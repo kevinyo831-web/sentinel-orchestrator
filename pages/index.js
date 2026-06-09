@@ -686,7 +686,11 @@ export default function App(){
               <h3 style={{fontFamily:"'Orbitron',sans-serif",fontSize:12,fontWeight:700,color:C.accent2,letterSpacing:".08em"}}>學習網頁內容</h3>
               <button onClick={()=>setShowLearn(false)} style={{background:"none",border:"none",cursor:"pointer",padding:2}}><Icon type="x" size={14} color={C.text3}/></button>
             </div>
-            <p style={{fontSize:10,color:C.text3,marginBottom:14,lineHeight:1.6}}>輸入網頁 URL，系統將擷取內容作為 AI 分析的背景知識（最多 10 個）</p>
+            <p style={{fontSize:10,color:C.text3,marginBottom:8,lineHeight:1.6}}>輸入網頁 URL，系統將擷取內容作為 AI 分析的背景知識（最多 10 個）</p>
+            <div style={{display:"flex",alignItems:"center",gap:5,padding:"5px 8px",borderRadius:3,background:`${C.warn}08`,border:`1px solid ${C.warn}20`,marginBottom:12}}>
+              <span style={{fontSize:11,color:C.warn,flexShrink:0}}>🇨🇳</span>
+              <span style={{fontSize:9.5,color:C.warn,lineHeight:1.5}}>僅支援中國大陸長城牆內可訪問的網址（.cn 域名或已知境內平台）</span>
+            </div>
 
             {/* URL Input */}
             <div style={{display:"flex",gap:6,marginBottom:12}}>
