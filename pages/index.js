@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 /* ═══════════════════════════════════════════════════════════════
-   SENTINEL ORCHESTRATOR v4
+   SENTINEL ORCHESTRATOR v5
    Cyberpunk UI · Markdown Rendering · NIM/Vertex Enhanced
+   URL Learning · Web Context Injection
    ═══════════════════════════════════════════════════════════════ */
 
 const C = {
@@ -294,6 +295,10 @@ const Icon=({type,size=16,color=C.text2})=>{
     key:<svg {...s} viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78Zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>,
     wifi:<svg {...s} viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1" fill={color}/></svg>,
     check:<svg {...s} viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>,
+    learn:<svg {...s} viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>,
+    globe:<svg {...s} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>,
+    trash:<svg {...s} viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>,
+    plus:<svg {...s} viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
   };
   return icons[type]||null;
 };
@@ -391,7 +396,7 @@ function AIBubble({provider,query,delay=0,role,isEnhanced,onRerun,modes,currentM
 
 const actBtn={display:"flex",alignItems:"center",gap:4,background:C.surface,border:`1px solid ${C.border}`,borderRadius:4,padding:"3px 8px",color:C.text3,fontSize:10,cursor:"pointer",fontFamily:"'Share Tech Mono',monospace",letterSpacing:".04em",transition:"all .12s"};
 
-function UserBubble({text,images,files}){
+function UserBubble({text,images,files,learnCount}){
   return(
     <div style={{display:"flex",justifyContent:"flex-end",marginBottom:12,animation:"slideUp .2s ease"}}>
       <div style={{maxWidth:"72%"}}>
@@ -401,6 +406,7 @@ function UserBubble({text,images,files}){
             {files?.map((f,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:3,background:C.surface,border:`1px solid ${C.border}`,borderRadius:3,padding:"3px 6px",fontSize:9,color:C.text3}}><Icon type="clip" size={10} color={C.text3}/>{f.name}</div>)}
           </div>
         )}
+        {learnCount>0&&<div style={{display:"flex",justifyContent:"flex-end",marginBottom:3}}><span style={{fontSize:9,padding:"1px 6px",borderRadius:2,background:`${C.accent2}18`,color:C.accent2,border:`1px solid ${C.accent2}30`,letterSpacing:".06em"}}><Icon type="globe" size={9} color={C.accent2}/> {learnCount} URL LEARNED</span></div>}
         <div style={{background:`${C.accent}12`,border:`1px solid ${C.accent}25`,borderRadius:6,borderTopRightRadius:1,padding:"10px 14px",fontSize:13.5,lineHeight:1.7,color:C.white}}>{text}</div>
       </div>
     </div>
@@ -445,6 +451,9 @@ export default function App(){
   const[images,setImages]=useState([]);
   const[files,setFiles]=useState([]);
   const[recording,setRecording]=useState(false);
+  const[showLearn,setShowLearn]=useState(false);
+  const[learnInput,setLearnInput]=useState('');
+  const[learnedUrls,setLearnedUrls]=useState([]); // [{url, title, text, loading, error}]
   const chatEnd=useRef(null);const inputRef=useRef(null);const fileRef=useRef(null);const imgRef=useRef(null);const recRef=useRef(null);
   const cur=MODES.find(m=>m.id===mode);
 
@@ -466,6 +475,27 @@ export default function App(){
     for(const item of items){if(item.type.startsWith("image/")){e.preventDefault();const reader=new FileReader();reader.onload=ev=>setImages(p=>[...p,ev.target.result]);reader.readAsDataURL(item.getAsFile())}}
   },[]);
 
+  const addLearnUrl=useCallback(async()=>{
+    const url=learnInput.trim();
+    if(!url||learnedUrls.length>=10)return;
+    if(learnedUrls.some(u=>u.url===url))return;
+    const entry={url,title:url,text:'',loading:true,error:null};
+    setLearnedUrls(prev=>[...prev,entry]);
+    setLearnInput('');
+    try{
+      const res=await fetch('/api/learn',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+      const data=await res.json();
+      if(!res.ok)throw new Error(data.error||'載入失敗');
+      setLearnedUrls(prev=>prev.map(u=>u.url===url?{...u,title:data.title,text:data.text,loading:false}:u));
+    }catch(err){
+      setLearnedUrls(prev=>prev.map(u=>u.url===url?{...u,loading:false,error:err.message}:u));
+    }
+  },[learnInput,learnedUrls]);
+
+  const removeLearnUrl=useCallback((url)=>{
+    setLearnedUrls(prev=>prev.filter(u=>u.url!==url));
+  },[]);
+
   const handleSend=useCallback(()=>{
     const text=input.trim();
     if((!text&&images.length===0&&files.length===0)||busy)return;
@@ -473,10 +503,19 @@ export default function App(){
     setInput("");setBusy(true);
     const providers=[...cur.providers];
     if(localLLM&&!providers.includes("local"))providers.push("local");
-    setMsgs(prev=>[...prev,{type:"user",text:text||"[附件]",id:Date.now(),images:[...images],files:[...files]},{type:"ai",mode,id:Date.now()+1,query:text||"分析附件內容",providers,enhancer:cur.enhancer}]);
+    // 將學習的網頁內容注入到查詢中
+    const readyUrls=learnedUrls.filter(u=>!u.loading&&!u.error&&u.text);
+    const contextBlock=readyUrls.length>0
+      ?'\n\n---\n【已學習的網頁內容】\n'+readyUrls.map(u=>`來源：${u.title}\nURL：${u.url}\n內容摘要：${u.text}`).join('\n\n---\n')
+      :'';
+    const fullQuery=(text||"分析附件內容")+contextBlock;
+    setMsgs(prev=>[...prev,
+      {type:"user",text:text||"[附件]",id:Date.now(),images:[...images],files:[...files],learnCount:readyUrls.length},
+      {type:"ai",mode,id:Date.now()+1,query:fullQuery,providers,enhancer:cur.enhancer}
+    ]);
     setImages([]);setFiles([]);
     setTimeout(()=>setBusy(false),(providers.length+1)*1400+2500);
-  },[input,busy,mode,cur,localLLM,images,files,recording]);
+  },[input,busy,mode,cur,localLLM,images,files,recording,learnedUrls]);
 
   const handleRerun=(query,newMode)=>{
     const m=MODES.find(x=>x.id===newMode);if(!m)return;setBusy(true);
@@ -521,7 +560,7 @@ export default function App(){
             </div>
             <div>
               <div style={{fontFamily:"'Orbitron',sans-serif",fontSize:12,fontWeight:700,color:C.white,letterSpacing:".06em"}}>SENTINEL</div>
-              <div style={{fontSize:9,color:C.text3,letterSpacing:".14em"}}>ORCHESTRATOR v4</div>
+              <div style={{fontSize:9,color:C.text3,letterSpacing:".14em"}}>ORCHESTRATOR v5</div>
             </div>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:5,marginTop:10}}>
@@ -615,6 +654,10 @@ export default function App(){
                 <input ref={imgRef} type="file" accept="image/*" multiple hidden onChange={e=>{[...e.target.files].forEach(f=>{const r=new FileReader();r.onload=ev=>setImages(p=>[...p,ev.target.result]);r.readAsDataURL(f)});e.target.value=""}}/>
                 <button onClick={()=>fileRef.current?.click()} title="File" style={toolBtn}><Icon type="clip" size={14} color={C.text3}/></button>
                 <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.txt,.csv,.json,.md,.xlsx" multiple hidden onChange={e=>{setFiles(p=>[...p,...[...e.target.files].map(f=>({name:f.name,size:f.size}))]);e.target.value=""}}/>
+                <button onClick={()=>setShowLearn(true)} title="學習網頁內容" style={{...toolBtn,background:learnedUrls.filter(u=>!u.loading&&!u.error).length>0?`${C.accent2}15`:C.surface,borderColor:learnedUrls.filter(u=>!u.loading&&!u.error).length>0?`${C.accent2}40`:C.border,position:"relative"}}>
+                  <Icon type="learn" size={14} color={learnedUrls.filter(u=>!u.loading&&!u.error).length>0?C.accent2:C.text3}/>
+                  {learnedUrls.filter(u=>!u.loading&&!u.error).length>0&&<span style={{position:"absolute",top:-3,right:-3,width:12,height:12,borderRadius:"50%",background:C.accent2,color:C.bg,fontSize:7,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{learnedUrls.filter(u=>!u.loading&&!u.error).length}</span>}
+                </button>
               </div>
               <div style={{flex:1,background:C.surface,border:`1px solid ${C.border}`,borderRadius:4,padding:"2px 2px 2px 10px",display:"flex",alignItems:"flex-end"}}>
                 <textarea ref={inputRef} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();handleSend()}}} onPaste={handlePaste}
@@ -634,6 +677,69 @@ export default function App(){
           </div>
         </div>
       </main>
+
+      {/* LEARN MODAL */}
+      {showLearn&&(
+        <div onClick={()=>setShowLearn(false)} style={{position:"fixed",inset:0,zIndex:100,background:"rgba(0,0,0,.65)",backdropFilter:"blur(3px)",display:"flex",alignItems:"center",justifyContent:"center",animation:"fadeIn .12s ease"}}>
+          <div onClick={e=>e.stopPropagation()} style={{width:440,maxHeight:"80vh",display:"flex",flexDirection:"column",background:C.panel,border:`1px solid ${C.border}`,borderRadius:6,padding:"20px",animation:"slideUp .25s cubic-bezier(.16,1,.3,1)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+              <h3 style={{fontFamily:"'Orbitron',sans-serif",fontSize:12,fontWeight:700,color:C.accent2,letterSpacing:".08em"}}>學習網頁內容</h3>
+              <button onClick={()=>setShowLearn(false)} style={{background:"none",border:"none",cursor:"pointer",padding:2}}><Icon type="x" size={14} color={C.text3}/></button>
+            </div>
+            <p style={{fontSize:10,color:C.text3,marginBottom:14,lineHeight:1.6}}>輸入網頁 URL，系統將擷取內容作為 AI 分析的背景知識（最多 10 個）</p>
+
+            {/* URL Input */}
+            <div style={{display:"flex",gap:6,marginBottom:12}}>
+              <input
+                value={learnInput}
+                onChange={e=>setLearnInput(e.target.value)}
+                onKeyDown={e=>{if(e.key==="Enter")addLearnUrl()}}
+                placeholder="https://www.example.com"
+                style={{...inputSt,flex:1}}
+              />
+              <button
+                onClick={addLearnUrl}
+                disabled={!learnInput.trim()||learnedUrls.length>=10}
+                style={{padding:"6px 12px",borderRadius:3,border:`1px solid ${C.accent2}40`,background:learnInput.trim()&&learnedUrls.length<10?`${C.accent2}15`:C.dim,color:learnInput.trim()&&learnedUrls.length<10?C.accent2:C.text3,fontSize:10,fontWeight:700,cursor:learnInput.trim()&&learnedUrls.length<10?"pointer":"default",letterSpacing:".06em",fontFamily:"'Orbitron',sans-serif",whiteSpace:"nowrap"}}
+              >+ 新增</button>
+            </div>
+
+            {/* URL List */}
+            <div style={{flex:1,overflowY:"auto"}}>
+              {learnedUrls.length===0&&(
+                <div style={{textAlign:"center",padding:"24px 0",color:C.text3,fontSize:11}}>
+                  <Icon type="globe" size={28} color={C.text3}/>
+                  <div style={{marginTop:8}}>尚未加入任何 URL</div>
+                </div>
+              )}
+              {learnedUrls.map((u,i)=>(
+                <div key={u.url} style={{display:"flex",alignItems:"flex-start",gap:8,padding:"8px 10px",borderRadius:4,background:u.error?`${C.warn}08`:u.loading?`${C.accent2}06`:`${C.accent}06`,border:`1px solid ${u.error?C.warn+"20":u.loading?C.accent2+"20":C.accent+"15"}`,marginBottom:6}}>
+                  <div style={{marginTop:2,flexShrink:0}}>
+                    {u.loading
+                      ?<span style={{display:"inline-block",animation:"spin .7s linear infinite",color:C.accent2,fontSize:12}}>+</span>
+                      :u.error
+                        ?<span style={{color:C.warn,fontSize:12}}>⚠</span>
+                        :<Icon type="check" size={12} color={C.accent}/>
+                    }
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:10,fontWeight:600,color:u.error?C.warn:u.loading?C.accent2:C.white,marginBottom:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.title||u.url}</div>
+                    <div style={{fontSize:9,color:C.text3,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.url}</div>
+                    {u.error&&<div style={{fontSize:9,color:C.warn,marginTop:2}}>{u.error}</div>}
+                    {!u.loading&&!u.error&&u.text&&<div style={{fontSize:9,color:C.text3,marginTop:2}}>{u.text.slice(0,60)}...</div>}
+                  </div>
+                  <button onClick={()=>removeLearnUrl(u.url)} style={{background:"none",border:"none",cursor:"pointer",padding:2,flexShrink:0,opacity:.6}}><Icon type="trash" size={12} color={C.text3}/></button>
+                </div>
+              ))}
+            </div>
+
+            <div style={{marginTop:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <span style={{fontSize:9,color:C.text3,letterSpacing:".06em"}}>{learnedUrls.filter(u=>!u.loading&&!u.error).length}/{10} 已就緒</span>
+              <button onClick={()=>setShowLearn(false)} style={{padding:"7px 16px",borderRadius:3,border:`1px solid ${C.accent2}40`,background:`${C.accent2}15`,color:C.accent2,fontSize:11,fontWeight:700,cursor:"pointer",letterSpacing:".08em",fontFamily:"'Orbitron',sans-serif"}}>確認</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* API MODAL */}
       {showKeys&&(
