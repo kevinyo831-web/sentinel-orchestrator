@@ -432,6 +432,54 @@ function DebateView({query,onRerun,modes,currentMode}){
   );
 }
 
+// ═══ HOST STATUS WIDGET ═══
+function HostStatus() {
+  const [hosts, setHosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    try {
+      const r = await fetch('/api/host-status');
+      const data = await r.json();
+      setHosts(data.hosts || []);
+    } catch {
+      setHosts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const t = setInterval(refresh, 30000);
+    return () => clearInterval(t);
+  }, [refresh]);
+
+  if (loading) return (
+    <div style={{display:"flex",alignItems:"center",gap:4,fontSize:9,color:C.text3,letterSpacing:".08em"}}>
+      <span style={{width:5,height:5,borderRadius:"50%",background:C.dim,animation:"pulse 1.2s ease-in-out infinite"}}/>
+      <span>CHECKING...</span>
+    </div>
+  );
+
+  return (
+    <div style={{display:"flex",gap:6,alignItems:"center"}}>
+      {hosts.map(h => {
+        const col = h.online ? C.accent : C.warn;
+        return (
+          <div key={h.id} title={`${h.ip}:${h.port} — ${h.online ? `${h.latency}ms` : 'OFFLINE'}`}
+            onClick={refresh}
+            style={{display:"flex",alignItems:"center",gap:4,cursor:"pointer",background:`${col}0A`,border:`1px solid ${col}25`,borderRadius:3,padding:"2px 7px"}}>
+            <span style={{width:5,height:5,borderRadius:"50%",background:col,boxShadow:`0 0 5px ${col}`,flexShrink:0,animation:h.online?"glowPulse 2s ease-in-out infinite":"none"}}/>
+            <span style={{fontFamily:"'Share Tech Mono',monospace",fontSize:9,fontWeight:700,color:col,letterSpacing:".08em"}}>{h.label}</span>
+            <span style={{fontSize:8,color:`${col}88`,letterSpacing:".04em"}}>{h.online ? `${h.latency}ms` : 'DOWN'}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ═══ MAIN ═══
 export default function App(){
   const[mode,setMode]=useState("quick");
@@ -569,7 +617,8 @@ export default function App(){
             </select>
             <span style={{fontSize:10,color:C.text3,letterSpacing:".04em",display:"none"}} className="desktop-only">{cur.providers.length}{localLLM?"+1":""} ENGINES</span>
           </div>
-          <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <HostStatus/>
             <div style={{display:"flex",gap:3}}>{cur.providers.map(pv=><span key={pv} style={{width:4,height:4,borderRadius:1,background:C.accent,opacity:.6}}/>)}{localLLM&&<span style={{width:4,height:4,borderRadius:1,background:C.accent2,opacity:.6}}/>}</div>
           </div>
         </header>
