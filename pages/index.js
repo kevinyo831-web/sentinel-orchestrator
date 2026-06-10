@@ -467,12 +467,12 @@ function HostStatus() {
       {hosts.map(h => {
         const col = h.online ? C.accent : C.warn;
         return (
-          <div key={h.id} title={`${h.ip}:${h.port} — ${h.online ? `${h.latency}ms` : 'OFFLINE'}`}
+          <div key={h.id} title={`${h.ip} — ${h.online ? 'ONLINE' : 'OFFLINE'}${h.lastSeen ? ` / last seen ${new Date(h.lastSeen).toLocaleString()}` : ''}`}
             onClick={refresh}
             style={{display:"flex",alignItems:"center",gap:4,cursor:"pointer",background:`${col}0A`,border:`1px solid ${col}25`,borderRadius:3,padding:"2px 7px"}}>
             <span style={{width:5,height:5,borderRadius:"50%",background:col,boxShadow:`0 0 5px ${col}`,flexShrink:0,animation:h.online?"glowPulse 2s ease-in-out infinite":"none"}}/>
             <span style={{fontFamily:"'Share Tech Mono',monospace",fontSize:9,fontWeight:700,color:col,letterSpacing:".08em"}}>{h.label}</span>
-            <span style={{fontSize:8,color:`${col}88`,letterSpacing:".04em"}}>{h.online ? `${h.latency}ms` : 'DOWN'}</span>
+            <span style={{fontSize:8,color:`${col}88`,letterSpacing:".04em"}}>{h.online ? (h.latency != null ? `${h.latency}ms` : 'UP') : 'DOWN'}</span>
           </div>
         );
       })}
