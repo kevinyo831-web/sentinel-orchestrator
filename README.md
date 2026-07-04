@@ -29,6 +29,12 @@
 
 已部署至 Vercel：https://sentinel-orchestrator.vercel.app
 
+### HO5 AI 流量網關（選用）
+
+可將上海 HO5 的 Ubuntu 主機部署為 AI API 流量網關（LiteLLM + Redis 緩存 +
+tc 流量整形 + Tailscale 安全隔離），讓所有 AI 請求統一出口、自動重試與降級。
+部署方式與 App 端設定見 [`deploy/ho5/README.md`](deploy/ho5/README.md)。
+
 ## 環境變數
 
 在 Vercel 設定以下 API Keys（設定一次，所有裝置通用）：

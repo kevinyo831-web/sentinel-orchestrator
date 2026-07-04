@@ -20,6 +20,33 @@ export default async function handler(req, res) {
     let response;
     const systemPrompt = prompts[provider] || '';
 
+    // HO5 AI 流量網關模式：設定 HO5_GATEWAY_URL 後，所有 provider 統一走
+    // HO5 上的 LiteLLM 網關（重試/降級/緩存見 deploy/ho5/），不再直連各家 API
+    if (process.env.HO5_GATEWAY_URL) {
+      response = await fetch(`${process.env.HO5_GATEWAY_URL}/v1/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.HO5_GATEWAY_KEY}`
+        },
+        body: JSON.stringify({
+          model: provider,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: query }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HO5 網關錯誤 (${response.status}): ${errorText}`);
+      }
+
+      const gwData = await response.json();
+      return res.json({ text: gwData.choices?.[0]?.message?.content || '無法生成回應' });
+    }
+
     switch(provider) {
       case 'gemini':
         response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.NEXT_PUBLIC_GEMINI_KEY}`, {

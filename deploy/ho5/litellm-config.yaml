@@ -1,0 +1,68 @@
+# LiteLLM 網關設定 — model_name 對應 Sentinel Orchestrator 的 provider 名稱
+# App 端只要呼叫 POST /v1/chat/completions 並指定 model: gemini / openai / ... 即可
+
+model_list:
+  # 戰略長（CSO）
+  - model_name: gemini
+    litellm_params:
+      model: gemini/gemini-1.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  # 風控長
+  - model_name: openai
+    litellm_params:
+      model: openai/gpt-4-turbo-preview
+      api_key: os.environ/OPENAI_API_KEY
+
+  # 策略情報長
+  - model_name: perplexity
+    litellm_params:
+      model: perplexity/llama-3.1-sonar-large-128k-online
+      api_key: os.environ/PERPLEXITY_API_KEY
+
+  # 創業家
+  - model_name: grok
+    litellm_params:
+      model: xai/grok-2-latest
+      api_key: os.environ/XAI_API_KEY
+
+  # 營運長（COO）
+  - model_name: nvidia
+    litellm_params:
+      model: nvidia_nim/meta/llama-3.1-70b-instruct
+      api_key: os.environ/NVIDIA_API_KEY
+
+  # 董事會主席（Vertex AI 需掛載 GCP 服務帳號憑證，見 README）
+  - model_name: vertex
+    litellm_params:
+      model: vertex_ai/gemini-1.5-pro
+      vertex_project: os.environ/VERTEX_PROJECT
+      vertex_location: os.environ/VERTEX_LOCATION
+
+  # 獨立顧問 — 跑在 HO5 本機的 Ollama，流量完全不出海
+  - model_name: local
+    litellm_params:
+      model: ollama/llama3.1
+      api_base: os.environ/OLLAMA_API_BASE
+
+litellm_settings:
+  # Redis 響應緩存：相同請求 1 小時內直接回本地快取，Token 消耗歸零
+  cache: true
+  cache_params:
+    type: redis
+    ttl: 3600
+  # 跨境連線不穩時在網關層自動重試，不讓底層腳本直接報錯
+  num_retries: 3
+  request_timeout: 90
+
+router_settings:
+  # 境外主力模型抽風時的降級路徑：先退到 Gemini Flash，再退到本地模型
+  fallbacks:
+    - openai: ["gemini", "local"]
+    - grok: ["gemini", "local"]
+    - perplexity: ["gemini", "local"]
+    - vertex: ["gemini", "local"]
+
+general_settings:
+  # 所有調用方必須帶 Authorization: Bearer <LITELLM_MASTER_KEY>
+  master_key: os.environ/LITELLM_MASTER_KEY

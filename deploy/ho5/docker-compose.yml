@@ -1,0 +1,44 @@
+# HO5（上海 Ubuntu 主機）AI 流量網關
+# LiteLLM 統一代理所有 AI API + Redis 響應緩存
+#
+# 啟動：cp .env.example .env（填入金鑰）→ docker compose up -d
+# 安全：預設只監聽 HO5_BIND_IP（建議設為 Tailscale 內網 IP，不暴露公網）
+
+services:
+  litellm:
+    image: ghcr.io/berriai/litellm:main-stable
+    container_name: ho5-litellm
+    restart: unless-stopped
+    ports:
+      - "${HO5_BIND_IP:-127.0.0.1}:4000:4000"
+    volumes:
+      - ./litellm-config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    extra_hosts:
+      # 讓容器能連到宿主機上的 Ollama（local 模型）
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  redis:
+    image: redis:7-alpine
+    container_name: ho5-redis
+    restart: unless-stopped
+    # 只供 litellm 內部使用，不對外開埠
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redis-data:
