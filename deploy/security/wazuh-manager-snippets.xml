@@ -1,0 +1,43 @@
+<!--
+  Wazuh Manager 加固片段（Wazuh 4.x）
+  把以下區塊合併進 Manager 的 /var/ossec/etc/ossec.conf 對應位置，
+  然後 systemctl restart wazuh-manager
+
+  目的：
+  1. 開啟漏洞偵測 → Critical 告警附上具體 CVE，修補才有依據
+  2. 主動回應   → SSH 暴力破解來源 IP 自動封鎖 30 分鐘（累犯自動再犯再封）
+-->
+<ossec_config>
+
+  <!-- ── 1. 漏洞偵測（4.8+ 語法；4.7 以下用 <vulnerability-detector>）── -->
+  <vulnerability-detection>
+    <enabled>yes</enabled>
+    <index-status>yes</index-status>
+    <feed-update-interval>60m</feed-update-interval>
+  </vulnerability-detection>
+
+  <!-- 漏洞偵測依賴 syscollector 的套件清單，確認各 agent 已啟用 -->
+  <wodle name="syscollector">
+    <disabled>no</disabled>
+    <interval>1h</interval>
+    <packages>yes</packages>
+    <os>yes</os>
+    <hotfixes>yes</hotfixes>
+    <ports all="no">yes</ports>
+    <processes>yes</processes>
+  </wodle>
+
+  <!-- ── 2. SSH 暴力破解主動封鎖 ──────────────────────────────
+       rule 5710: 嘗試不存在的使用者
+       rule 5712: SSHD 暴力破解
+       rule 5763: 大量認證失敗
+       firewall-drop 會在觸發告警的那台 agent（HO5/N200）上
+       直接下 iptables DROP，封 1800 秒。                    -->
+  <active-response>
+    <command>firewall-drop</command>
+    <location>local</location>
+    <rules_id>5710,5712,5763</rules_id>
+    <timeout>1800</timeout>
+  </active-response>
+
+</ossec_config>
